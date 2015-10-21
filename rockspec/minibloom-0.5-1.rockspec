@@ -1,4 +1,4 @@
-package = "minibloom"
+package = "miniblooms"
 version = "0.5-1"
 source = {
 	url = "https://github.com/bitdivine/miniblooms"
