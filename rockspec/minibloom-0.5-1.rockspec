@@ -1,14 +1,13 @@
 package = "minibloom"
 version = "0.5-1"
 source = {
-	url = "..." -- We don't have one yet
+	url = "https://github.com/bitdivine/miniblooms"
 }
 description = {
-	summary = "An example for the LuaRocks tutorial.",
+	summary = "Small, fast bloom filters",
 	detailed = [[
-		This is an example for the LuaRocks tutorial.
-		Here we would put a detailed, typically
-		paragraph-long description.
+		This is a small, fast implementation of bloom
+		filters that takes cache performance into account.
 	]],
 	homepage = "https://github.com/bitdivine/minibloom",
 	license = "MIT"
