@@ -10,3 +10,40 @@ This is a small, simple and fast implementation of bloom filters.  The default b
 Hopefully something like this will eventually work, however I'm unfamiliar with luarocks so will have to take some time sometime to figure out how:
 
     sudo luarocks install miniblooms
+
+## API
+
+There are bindings for C, Lua and shell:
+
+## Lua API:
+
+	make(filename,capacity,error) -> bloomfile
+	open(filename) -> bloomfile
+	close(minibloom_handle)
+	bloom(bloomfile) -> filter
+	get(filter,key) -> bool
+	set(filter,key)
+
+Where:
+
+* `string:filename` is the relative or absolute path to the bloom filter.
+* `int:capacity` is the number of unique entries the bloom filter is expected to cope with.
+* `float:error` is the probability of a false positive, i.e. the probability of the filter recognising something that it has in fact not seen before.
+* `string:key` is a value to be marked or looked up in the bloom filter.
+
+
+### Lua Example:
+
+This is the UNIX command line "uniq" without any sorting.  It reads lines from stdin and writes them to stdout if they have not been seen before.
+
+	local minibloom = require "minibloom"
+	local bloomfile, filter
+
+	bloomfile = minibloom.make(",miniuniq", 10000, 0.01)
+
+	filter = minibloom.bloom(bloomfile)
+	for line in io.lines() do
+	    if (0 == minibloom.get(filter, line)) then minibloom.set(filter, line) ; print(line) ; end
+	end
+	minibloom.close(bloomfile)
+
