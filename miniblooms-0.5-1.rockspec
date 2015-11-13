@@ -1,0 +1,1 @@
+rocks/miniblooms-0.5-1.rockspec
