@@ -15,15 +15,18 @@ typedef struct {
 
 int	minidump(const char*filename, minibloom_t*mb);
 int	minimake(minibloomfile_t* ans, const char*filename, unsigned int capacity, double error_rate);
+int	miniblankclone(minibloomfile_t* ans, const char*filename, minibloom_t* head);
 int	miniload(minibloomfile_t* ans, const char*filename, int append);
 int	miniclose(minibloomfile_t*);
 
 int	minidumpf(FILE* fp, minibloom_t*mb);
 int	minimakef(minibloomfile_t* ans, FILE* fp, unsigned int capacity, double error_rate);
+int	miniblankclonef(minibloomfile_t* ans, FILE* fp, minibloom_t* head);
 int	miniloadf(minibloomfile_t* ans, FILE* fp, int append);
 
 int	minidumpfd(int fd, minibloom_t*mb);
 int	minimakefd(minibloomfile_t* ans, int fd, unsigned int capacity, double error_rate);
+int	miniblankclonefd(minibloomfile_t* ans, int fd, minibloom_t* head);
 int	miniloadfd(minibloomfile_t* ans, int fd, int append);
 
 int	minicheckfilehandle(minibloomfile_t*bf);
