@@ -18,15 +18,25 @@ typedef struct {
     uint64_t uniques;  // Entries that required setting at least one bit.
     uint64_t density;  // Bits set.
     // Memaligned.
-    uint8_t blooms[0]; // Actually nfuncs * bytesperbloom.
+    uint8_t blooms[0]; // Blooms proper.  Actual length == nfuncs * bytesperbloom.
 } minibloom_t;
 
-minibloom_t *minibloom(unsigned int capacity, double error_rate);
+// Make a bloom filter:
+minibloom_t *minibloom(unsigned int capacity, double error_rate); // Calculate parameters and make the filter.
+minibloom_t *minibloom_make(minibloom_t*head); // You decide on all the parameters; this makes the filter.
+
+// Discard a bloom filter: free(thebloom);
+
+// Work with a bloom filter:
 int miniset(minibloom_t *minibloom, const char *s, size_t len);
 int miniget(minibloom_t *minibloom, const char *s, size_t len);
 int minicheck(minibloom_t *minibloom);
 
+// Work on a boom filter header:
 void minihead(minibloom_t *ans, unsigned int capacity, double error_rate);
+void minihead_init(minibloom_t *ans);
+void minihead_fin(minibloom_t *ans);
+
 
 #define MINIMAGIC  (0xfa1affe1L)
 #define MINIVOODOO (0x97c29b3aL)

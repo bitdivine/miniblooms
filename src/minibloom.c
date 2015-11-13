@@ -10,6 +10,7 @@
 #define SALT_CONSTANT (0x97c29b3a)
 
 void minihead(minibloom_t*ans, unsigned int capacity, double error_rate){
+	minihead_init(ans);
 	// df/dt==-f/M => f=Me^(-t/M)
 	// Want max 1/4 bits to be set.  Hence at capacity:
 	// f=(3/4)M=Me^(-C/M)=>M=-C/ln(3/4) and nblooms=ceil(ln(err)/ln(1/4))
@@ -17,32 +18,44 @@ void minihead(minibloom_t*ans, unsigned int capacity, double error_rate){
 	size_t roundup; for(roundup = 2;bytesperbloom>>=1;roundup<<=1); bytesperbloom = roundup;
 	double tabe = 1.0 - exp(-((double)capacity)/(bytesperbloom*8));
 	size_t nfuncs = ceil(log(error_rate)/log(tabe));
-	memset((void *)ans,0,sizeof(minibloom_t));
 	ans->bytesperbloom=bytesperbloom;
 	ans->nfuncs=nfuncs;
-	ans->size=sizeof(minibloom_t)+nfuncs*bytesperbloom;
 	ans->error_rate=error_rate;
 	ans->capacity=capacity;
+	minihead_fin(ans);
+}
+void minihead_init(minibloom_t*ans){
+	memset((void *)ans,0,sizeof(minibloom_t));
+}
+void minihead_fin(minibloom_t*ans){
+	ans->size=sizeof(minibloom_t)+ (ans->nfuncs * ans->bytesperbloom);
 	ans->sanity=VOODOO;
 	ans->magic=MAGIC;
 }
 
 minibloom_t * minibloom(unsigned int capacity, double error_rate){
-	minibloom_t * ans;
 	minibloom_t head;
 	minihead(&head, capacity, error_rate);
-	ans = (minibloom_t *) malloc(head.size);
+	return minibloom_make(&head);
+}
+minibloom_t * minibloom_make(minibloom_t*head){
+	minibloom_t * ans;
+	if (!minicheck(head)) {
+		fprintf(stderr, "Bad minibloom header - cannot make full bloom file.\n");
+		return NULL;
+	}
+	ans = (minibloom_t *) malloc(head->size);
 	if (NULL==ans) {
 		fprintf(stderr
 			,"ERROR: Could not allocate memory: %ld blooms @ %ld bytes each + a bit = %ld\n"
 			 "	   Asked for capacity %ld at max error rate %f\n"
-			, (unsigned long)head.nfuncs, (unsigned long)head.bytesperbloom, (unsigned long)head.size
-			, (unsigned long)head.capacity, (double)head.error_rate
+			, (unsigned long)head->nfuncs, (unsigned long)head->bytesperbloom, (unsigned long)head->size
+			, (unsigned long)head->capacity, (double)head->error_rate
 			);
 		exit(2);
 	}
-	memset((void *)ans,0,head.size);
-	memcpy((void *)ans,(void *)(&head),sizeof(minibloom_t));
+	memset((void *)ans,0,head->size);
+	memcpy((void *)ans,(void *)(head),sizeof(minibloom_t));
 	return ans;
 }
 
