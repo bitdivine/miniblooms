@@ -30,21 +30,24 @@ else
     LDFLAGS += -Wl,--gc-sections
 endif
 
-all: libminibloom.so libminibloom.a minibloomcat
+all: libminibloom.so libminibloom.a minibloomcat minibloomglue
 
-libminibloom.so: $(SRCS:.c=.o)
+libminibloom.so: minibloom.o minibloomfile.o murmur.o
 	$(CROSS_COMPILE)$(CC) $(LDFLAGS) -shared $^ -o $@
 ifdef NDEBUG
 	$(CROSS_COMPILE)strip $@
 endif
 
-libminibloom.a: $(SRCS:.c=.o)
+libminibloom.a: minibloom.o minibloomfile.o murmur.o
 	$(CROSS_COMPILE_AR)$(AR) $(ARFLAGS) $@ $^
 
 minibloomcat: minibloom.o minibloomfile.o minibloomcat.o murmur.o
 	$(CROSS_COMPILE)$(CC) $(LDFLAGS) $^ -o $@
 
+minibloomglue: minibloom.o minibloomfile.o minibloomglue.o murmur.o
+	$(CROSS_COMPILE)$(CC) $(LDFLAGS) $^ -o $@
+
 clean:
-	rm -f libminibloom.so libminibloom.a *.o *.so *.gcno minibloomcat
+	rm -f libminibloom.so libminibloom.a *.o *.so *.gcno minibloomcat minibloomglue
 
 .PHONY: all clean
