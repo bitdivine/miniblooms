@@ -19,6 +19,16 @@ static int lua_oops(lua_State *L, const char *s)
 	lua_pushstring(L, buffer);
 	return lua_error(L);
 }
+static int lua_oops_str(lua_State *L, const char *s, char* ss)
+{
+	char buffer[1024];
+	if(!s) return 0;
+
+	snprintf(buffer, sizeof(buffer), "%s: '%s': error: %s", s, ss, strerror(errno));
+	buffer[sizeof(buffer)-1] = '\0';
+	lua_pushstring(L, buffer);
+	return lua_error(L);
+}
 
 static int luabind_minimake(lua_State *L)
 {
@@ -68,7 +78,7 @@ static int luabind_miniload(lua_State *L)
 	mib = (minibloomfile_t*) lua_newuserdata (L, sizeof(minibloomfile_t));
 	if (miniload(mib, filename, append)) {
 		lua_pop(L,1);
-		return lua_oops(L, "minibloom_open: error opening mib filter");
+		return lua_oops_str(L, "minibloom_open: error opening mib filter", filename);
 	}
 	return 1;
 }
