@@ -16,6 +16,8 @@
 #define  MINIBLOOMDO_BOOL    (128)
 #define  MINIBLOOMDO_CALCE   (256)
 #define  MINIBLOOMDO_CLONE   (512)
+#define  MINIBLOOMDO_FF      (1024)
+#define  MINIBLOOMDO_NUKE    (2048)
 #define  MIN(x,y)    ((x)<(y)?(x):(y))
 
 static void usage(const char * progname){
@@ -23,25 +25,25 @@ static void usage(const char * progname){
 		" Uniques & error prob: <stuff %s -u100 -e0.001 out.minibloom\n"
 		" Population & waste:   <stuff %s -u1000 -U500000 -W0.1 out.minibloom\n"
 		" Copy parameters:      <stuff %s -C template.minibloom out.minibloom\n"
+		" Table bytes & funcs:  <stuff %s -t1000 -f5 out.minibloom\n"
 		"Options:\n"
-		" -a    Append to an existing bloom filter.\n"
-		" -b    Print every line from stdin followed by 1/0.\n"
-		" -c    DEPRECATED.  Please use -u\n"
-		" -C <file> Clone dimensions from an existing bloom filter.\n"
-		" -e    Error rate == probability of accepting a random element.\n"
-		" -f TODO: Number of filters == number of functions.  Use with -f.\n"
-		" -F TODO: Bytes per filter.\n"
-		" -g    Get the lines from stdin that are in the filter.\n"
-		" -G    Get the lines from stdin that are not in the filter.\n"
-		" -j    Print stats as JSON and exit.\n"
-		" -n TODO: Nuke - clear all the bits in an existing bloom filter before populating it.\n"
-		" -N TODO: Nuke - clear all the bits in a bloom filter and exit.\n"
-		" -s    Print stats before doing anything else.\n"
-		" -S    Print stats when done.\n"
-		" -u    Uniques in the input - usually very approximate.\n"
-		" -U    Uniques in the universe - usually very approximate.\n"
-		" -W    Waste == of accepted entries, what proportion may be wrong?\n"
-		,progname, progname, progname);
+		" -a     Append to an existing bloom filter.\n"
+		" -b     Print every line from stdin followed by 1/0.\n"
+		" -c     DEPRECATED.  Please use -u\n"
+		" -C %%s  Copy dimensions from an existing bloom filter.\n"
+		" -e %%f  Error == false positive == prob. of accepting by mistake.\n"
+		" -f %%d  Number of functions.\n"
+		" -g     Get the lines from stdin that are in the filter.\n"
+		" -G     Get the lines from stdin that are not in the filter.\n"
+		" -j     Print stats as JSON and exit.\n"
+		" -n     Nuke: Clear an existing bloom filter.\n"
+		" -s     Print stats before doing anything else.\n"
+		" -S     Print stats when done.\n"
+		" -t %%d  Bytes per table.\n"
+		" -u     Uniques in the input - usually very approximate.\n"
+		" -U     Uniques in the universe - usually very approximate.\n"
+		" -W %%f  Waste == of accepted entries, what proportion may be wrong?\n"
+		,progname, progname, progname, progname);
 }
 
 static void die(int code){
@@ -162,8 +164,12 @@ int main(int argc, char *argv[]){
 	int		err;
 	int		action = 0;
 	char		format = 't';
+	size_t		ff_nfuncs = 5;
+	size_t		ff_bytesperbloom = 1;
 
-	while ((ch = getopt(argc, argv, "hc:C:e:u:U:W:abugvtjsS")) != -1) {
+fprintf(stderr,"Reading params:\n");
+	while ((ch = getopt(argc, argv, "abc:C:e:f:gGhjsSt:u:U:W:")) != -1) {
+fprintf(stderr,"Parsing %c\n", ch);
 		switch (ch) {
 		case 'a':
 			action |= MINIBLOOMDO_APPEND;
@@ -187,12 +193,17 @@ int main(int argc, char *argv[]){
 			maxerrprob = atof(optarg);
 			if (maxerrprob>1) badarg("Error probability must be less than 1.");
 			break;
+		case 'f':
+			action |= MINIBLOOMDO_CREATE | MINIBLOOMDO_FF;
+			ff_nfuncs = atoi(optarg);
+			break;
 		case 'g':
 			action |= MINIBLOOMDO_GREP;
 			break;
 		case 'G':
 			action |= MINIBLOOMDO_GREPV;
 			break;
+		// case 'h': see end.
 		case 'j':
 			action |= MINIBLOOMDO_STATS;
 			format = 'j';
@@ -202,6 +213,11 @@ int main(int argc, char *argv[]){
 		case 'S':
 			action |= MINIBLOOMDO_STATSF;
 			break;
+		case 't':
+			action |= MINIBLOOMDO_CREATE | MINIBLOOMDO_FF;
+			ff_bytesperbloom = atoi(optarg);
+			break;
+		// case 'u': See c.
 		case 'U':
 			action |= MINIBLOOMDO_CREATE | MINIBLOOMDO_CALCE;
 			universe = atoll(optarg);
@@ -219,6 +235,7 @@ int main(int argc, char *argv[]){
 			exit(0);
 		}
 	}
+fprintf(stderr,"Read params.\n");
 	argc -= optind;
 	argv += optind;
 	if (argc != 1){
@@ -234,12 +251,6 @@ int main(int argc, char *argv[]){
 		action |= MINIBLOOMDO_READ;
 	}
 
-	// Calculate parameters?
-	if (action & MINIBLOOMDO_CALCE) {
-		if (capacity >= universe) maxerrprob = 0.99999;
-		else maxerrprob = (maxwaste * capacity)/((1.0-maxwaste) * (universe-capacity));
-	}
-
 	// MAKE OR LOAD
 	if (action & MINIBLOOMDO_CREATE) {
 		if (action & MINIBLOOMDO_CLONE) { // clones parameters, not data.
@@ -249,14 +260,32 @@ int main(int argc, char *argv[]){
 				if (err) die(err);
 			err = miniclose(&cloned_bloomfile);
 				if (err) die(err);
+		} else
+		if (action & MINIBLOOMDO_FF) {
+			minibloom_t head;
+fprintf(stderr,"Making with FF:\n");
+			minihead_init(&head);
+			head.nfuncs        = ff_nfuncs;
+			head.bytesperbloom = ff_bytesperbloom;
+			minihead_fin(&head);
+fprintf(stderr,"Made head\n");
+			err = miniblankclone(&bloomfile, filename, &head);
+fprintf(stderr,"Bloomfile\n");
+				if (err) die(err);
+		} else if (action & MINIBLOOMDO_CALCE){
+			if (capacity >= universe) maxerrprob = 0.99999;
+			else maxerrprob = (maxwaste * capacity)/((1.0-maxwaste) * (universe-capacity));
+			err = minimake(&bloomfile, filename, capacity, maxerrprob);
+				if (err) die(err);
 		} else {
 			err = minimake(&bloomfile, filename, capacity, maxerrprob);
+				if (err) die(err);
 		}
 	} else {
 		// Load from file:
 		err = miniload(&bloomfile, filename, action & MINIBLOOMDO_APPEND);
+			if (err) die(err);
 	}
-	if (err) die(err);
 	bloom = bloomfile.bloom;
 
 	// Print stats
