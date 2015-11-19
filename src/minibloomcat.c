@@ -18,21 +18,29 @@
 #define  MIN(x,y)    ((x)<(y)?(x):(y))
 
 static void usage(const char * progname){
-	printf("Usage: <stuff %s -c100 -e0.001 outfile\n"
-               "Or:    <stuff %s -c1000 -U500000 -W0.1 outfile\n"
+	printf(	"Usage: Make a bloom filter:\n"
+		" Uniques & error prob: <stuff %s -u100 -e0.001 out.minibloom\n"
+		" Population & waste:   <stuff %s -u1000 -U500000 -W0.1 out.minibloom\n"
+		" Copy parameters:      <stuff %s -C template.minibloom out.minibloom\n"
 		"Options:\n"
 		" -a    Append to an existing bloom filter.\n"
 		" -b    Print every line from stdin followed by 1/0.\n"
-		" -c    Capacity == approximate number of uniques.\n"
-		" -e    Error rate == probability of accepting a random element.\n"
+		" -c    DEPRECATED.  Please use -u\n"
+		" -C TODO: Clone == get dimensions from an existing bloom filter.\n"
+		" -e    Error rate == probability of accepting a random element. (Use with -c/-U)\n"
+		" -f TODO: Number of filters == number of functions.  Use with -f.\n"
+		" -F TODO: Bytes per filter.\n"
 		" -g    Get the lines from stdin that are in the filter.\n"
 		" -G    Get the lines from stdin that are not in the filter.\n"
 		" -j    Print stats as JSON and exit.\n"
+		" -n TODO: Nuke - clear all the bits in an existing bloom filter before populating it.\n"
+		" -N TODO: Nuke - clear all the bits in a bloom filter and exit.\n"
 		" -s    Print stats before doing anything else.\n"
 		" -S    Print stats when done.\n"
-		" -U    Size of universe - use in combination with -c and -W\n"
+		" -u    Uniques in the input - usually very approximate.\n"
+		" -U    Uniques in the universe - usually very approximate.\n"
 		" -W    Waste == of accepted entries, what proportion may be wrong?\n"
-		,progname);
+		,progname, progname, progname);
 }
 
 static void die(int code){
@@ -152,7 +160,7 @@ int main(int argc, char *argv[]){
 	int		action = 0;
 	char		format = 't';
 
-	while ((ch = getopt(argc, argv, "hc:e:U:W:abugvtjsS")) != -1) {
+	while ((ch = getopt(argc, argv, "hc:e:u:U:W:abugvtjsS")) != -1) {
 		switch (ch) {
 		case 'a':
 			action |= MINIBLOOMDO_APPEND;
@@ -161,9 +169,11 @@ int main(int argc, char *argv[]){
 			action |= MINIBLOOMDO_BOOL;
 			break;
 		case 'c':
+			fprintf(stderr,"WARNING: -c is deprecated.  Please use -u instead.\n");
+		case 'u':
 			action |= MINIBLOOMDO_CREATE;
 			capacity = atoi(optarg);
-			if (capacity<1) badarg("Capacity must be greater than 1.");
+			if (capacity<1) badarg("Uniques must be greater than 1.");
 			break;
 		case 'e':
 			action |= MINIBLOOMDO_CREATE;
@@ -184,9 +194,6 @@ int main(int argc, char *argv[]){
 			break;
 		case 'S':
 			action |= MINIBLOOMDO_STATSF;
-			break;
-		case 'u':
-			// Dummy option for compatibility
 			break;
 		case 'U':
 			action |= MINIBLOOMDO_CREATE | MINIBLOOMDO_CALCE;
