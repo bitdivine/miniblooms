@@ -21,21 +21,27 @@ typedef struct {
     uint8_t blooms[0]; // Blooms proper.  Actual length == nfuncs * bytesperbloom.
 } minibloom_t;
 
-// Make a bloom filter:
-minibloom_t *minibloom(unsigned int capacity, double error_rate); // Calculate parameters and make the filter.
-minibloom_t *minibloom_make(minibloom_t*head); // You decide on all the parameters; this makes the filter.
 
-// Discard a bloom filter: free(thebloom);
+// Make a bloom filter:
+minibloom_t *minibloom(unsigned int capacity, double error_rate); // Easy version.
+minibloom_t *minibloom_make(minibloom_t*head);                    // Hard version.  You do the maths.
+
+
+// Discard a bloom filter:
+// ... a bloom filter is just a chunk of memory so use: free(thebloom);
+
 
 // Work with a bloom filter:
 int miniset(minibloom_t *minibloom, const char *s, size_t len);
 int miniget(minibloom_t *minibloom, const char *s, size_t len);
 int minicheck(minibloom_t *minibloom);
 
+
 // Work on a boom filter header:
 void minihead(minibloom_t *ans, unsigned int capacity, double error_rate);
 void minihead_init(minibloom_t *ans);
 void minihead_fin(minibloom_t *ans);
+void minihead_clone_params(minibloom_t*target, minibloom_t* src);
 
 
 #define MINIMAGIC  (0xfa1affe1L)

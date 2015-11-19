@@ -15,6 +15,7 @@
 #define  MINIBLOOMDO_STATSF  (64)
 #define  MINIBLOOMDO_BOOL    (128)
 #define  MINIBLOOMDO_CALCE   (256)
+#define  MINIBLOOMDO_CLONE   (512)
 #define  MIN(x,y)    ((x)<(y)?(x):(y))
 
 static void usage(const char * progname){
@@ -26,8 +27,8 @@ static void usage(const char * progname){
 		" -a    Append to an existing bloom filter.\n"
 		" -b    Print every line from stdin followed by 1/0.\n"
 		" -c    DEPRECATED.  Please use -u\n"
-		" -C TODO: Clone == get dimensions from an existing bloom filter.\n"
-		" -e    Error rate == probability of accepting a random element. (Use with -c/-U)\n"
+		" -C <file> Clone dimensions from an existing bloom filter.\n"
+		" -e    Error rate == probability of accepting a random element.\n"
 		" -f TODO: Number of filters == number of functions.  Use with -f.\n"
 		" -F TODO: Bytes per filter.\n"
 		" -g    Get the lines from stdin that are in the filter.\n"
@@ -149,24 +150,30 @@ int main(int argc, char *argv[]){
 	double		maxerrprob = 0.001;
 	minibloom_t*	bloom;
 	minibloomfile_t bloomfile;
+	minibloomfile_t	cloned_bloomfile;
 	uint64_t	universe = 5000000000;
 	double		maxwaste = 0.1;
 	// Thrall:
 	char*		progname= argv[0];
 	char*		filename;
+	char*		cloned_filename;
 	char		buf[MAX_LENGTH];
 	int		ch;
 	int		err;
 	int		action = 0;
 	char		format = 't';
 
-	while ((ch = getopt(argc, argv, "hc:e:u:U:W:abugvtjsS")) != -1) {
+	while ((ch = getopt(argc, argv, "hc:C:e:u:U:W:abugvtjsS")) != -1) {
 		switch (ch) {
 		case 'a':
 			action |= MINIBLOOMDO_APPEND;
 			break;
 		case 'b':
 			action |= MINIBLOOMDO_BOOL;
+			break;
+		case 'C':
+			action |= MINIBLOOMDO_CREATE | MINIBLOOMDO_CLONE;
+			cloned_filename = optarg;
 			break;
 		case 'c':
 			fprintf(stderr,"WARNING: -c is deprecated.  Please use -u instead.\n");
@@ -235,8 +242,16 @@ int main(int argc, char *argv[]){
 
 	// MAKE OR LOAD
 	if (action & MINIBLOOMDO_CREATE) {
-		// Create bloom filter in memory:
-		err = minimake(&bloomfile, filename, capacity, maxerrprob);
+		if (action & MINIBLOOMDO_CLONE) { // clones parameters, not data.
+			err = miniload(&cloned_bloomfile, cloned_filename, 0);
+				if (err) die(err);
+			err = miniblankclone(&bloomfile, filename, cloned_bloomfile.bloom);
+				if (err) die(err);
+			err = miniclose(&cloned_bloomfile);
+				if (err) die(err);
+		} else {
+			err = minimake(&bloomfile, filename, capacity, maxerrprob);
+		}
 	} else {
 		// Load from file:
 		err = miniload(&bloomfile, filename, action & MINIBLOOMDO_APPEND);

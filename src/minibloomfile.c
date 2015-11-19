@@ -63,7 +63,9 @@ int miniblankclonefd(minibloomfile_t* ans, int fd, minibloom_t* head){
 	bloom = (minibloom_t*) mmap(NULL, total_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 	if (bloom == MAP_FAILED) return MINIERR_MMAP;
 	memset((void*)bloom,0,total_size);
-	memcpy((void*)bloom,(void*)(head), sizeof(minibloom_t));
+	minihead_init(bloom);
+	minihead_clone_params(bloom,head);
+	minihead_fin(bloom);
 	ans->fd = fd;
 	ans->bloom = bloom;
 	ans->writable=1;

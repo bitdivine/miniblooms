@@ -27,6 +27,12 @@ void minihead(minibloom_t*ans, unsigned int capacity, double error_rate){
 void minihead_init(minibloom_t*ans){
 	memset((void *)ans,0,sizeof(minibloom_t));
 }
+void minihead_clone_params(minibloom_t*target, minibloom_t* src){
+	target->bytesperbloom	= src->bytesperbloom;
+	target->nfuncs		= src->nfuncs;
+	target->error_rate	= src->error_rate;
+	target->capacity	= src->capacity;
+}
 void minihead_fin(minibloom_t*ans){
 	ans->size=sizeof(minibloom_t)+ (ans->nfuncs * ans->bytesperbloom);
 	ans->sanity=VOODOO;
