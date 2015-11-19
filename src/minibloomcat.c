@@ -168,7 +168,7 @@ int main(int argc, char *argv[]){
 	size_t		ff_bytesperbloom = 1;
 
 fprintf(stderr,"Reading params:\n");
-	while ((ch = getopt(argc, argv, "abc:C:e:f:gGhjsSt:u:U:W:")) != -1) {
+	while ((ch = getopt(argc, argv, "abc:C:e:f:gGhjnsSt:u:U:W:")) != -1) {
 fprintf(stderr,"Parsing %c\n", ch);
 		switch (ch) {
 		case 'a':
@@ -207,6 +207,10 @@ fprintf(stderr,"Parsing %c\n", ch);
 		case 'j':
 			action |= MINIBLOOMDO_STATS;
 			format = 'j';
+			break;
+		case 'n':
+			action |= MINIBLOOMDO_APPEND | MINIBLOOMDO_NUKE;
+			break;
 		case 's':
 			action |= MINIBLOOMDO_STATS;
 			break;
@@ -235,7 +239,6 @@ fprintf(stderr,"Parsing %c\n", ch);
 			exit(0);
 		}
 	}
-fprintf(stderr,"Read params.\n");
 	argc -= optind;
 	argv += optind;
 	if (argc != 1){
@@ -263,14 +266,11 @@ fprintf(stderr,"Read params.\n");
 		} else
 		if (action & MINIBLOOMDO_FF) {
 			minibloom_t head;
-fprintf(stderr,"Making with FF:\n");
 			minihead_init(&head);
 			head.nfuncs        = ff_nfuncs;
 			head.bytesperbloom = ff_bytesperbloom;
 			minihead_fin(&head);
-fprintf(stderr,"Made head\n");
 			err = miniblankclone(&bloomfile, filename, &head);
-fprintf(stderr,"Bloomfile\n");
 				if (err) die(err);
 		} else if (action & MINIBLOOMDO_CALCE){
 			if (capacity >= universe) maxerrprob = 0.99999;
@@ -285,6 +285,9 @@ fprintf(stderr,"Bloomfile\n");
 		// Load from file:
 		err = miniload(&bloomfile, filename, action & MINIBLOOMDO_APPEND);
 			if (err) die(err);
+		if (action & MINIBLOOMDO_NUKE){
+			minibloom_clear(bloomfile.bloom);
+		}
 	}
 	bloom = bloomfile.bloom;
 

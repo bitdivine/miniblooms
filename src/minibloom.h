@@ -35,6 +35,7 @@ minibloom_t *minibloom_make(minibloom_t*head);                    // Hard versio
 int miniset(minibloom_t *minibloom, const char *s, size_t len);
 int miniget(minibloom_t *minibloom, const char *s, size_t len);
 int minicheck(minibloom_t *minibloom);
+void minibloom_clear(minibloom_t* b);
 
 
 // Work on a boom filter header:
@@ -42,6 +43,7 @@ void minihead(minibloom_t *ans, unsigned int capacity, double error_rate);
 void minihead_init(minibloom_t *ans);
 void minihead_fin(minibloom_t *ans);
 void minihead_clone_params(minibloom_t*target, minibloom_t* src);
+void minihead_clear(minibloom_t*ans);
 
 
 #define MINIMAGIC  (0xfa1affe1L)

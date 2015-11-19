@@ -11,8 +11,9 @@
 #define  MIN(x,y)    ((x)<(y)?(x):(y))
 
 static void usage(const char * progname){
-	printf("Usage: <stuff %s -o outfile infile infile infile infile ...\n"
-               "Or:    <stuff %s -a outfile infile infile infile infile ...\n"
+	printf(	"Usage:\n"
+		" Create: <stuff %s -o outfile infile infile infile infile ...\n"
+		" Append: <stuff %s -a outfile infile infile infile infile ...\n"
 		,progname, progname);
 }
 

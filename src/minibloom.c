@@ -27,6 +27,11 @@ void minihead(minibloom_t*ans, unsigned int capacity, double error_rate){
 void minihead_init(minibloom_t*ans){
 	memset((void *)ans,0,sizeof(minibloom_t));
 }
+void minihead_clear(minibloom_t*ans){
+	ans->entries = 0;
+	ans->uniques = 0;
+	ans->density = 0;
+}
 void minihead_clone_params(minibloom_t*target, minibloom_t* src){
 	target->bytesperbloom	= src->bytesperbloom;
 	target->nfuncs		= src->nfuncs;
@@ -64,7 +69,10 @@ minibloom_t * minibloom_make(minibloom_t*head){
 	memcpy((void *)ans,(void *)(head),sizeof(minibloom_t));
 	return ans;
 }
-
+void minibloom_clear(minibloom_t* bloom){
+	minihead_clear(bloom);
+	memset((void *)(&bloom->blooms[0]),0,bloom->size - sizeof(minibloom_t));
+}
 int minicheck(minibloom_t* b){
 	return (
 	  (b->magic == MAGIC)
