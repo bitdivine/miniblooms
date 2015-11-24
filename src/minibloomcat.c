@@ -167,9 +167,7 @@ int main(int argc, char *argv[]){
 	size_t		ff_nfuncs = 5;
 	size_t		ff_bytesperbloom = 1;
 
-fprintf(stderr,"Reading params:\n");
 	while ((ch = getopt(argc, argv, "abc:C:e:f:gGhjnsSt:u:U:W:")) != -1) {
-fprintf(stderr,"Parsing %c\n", ch);
 		switch (ch) {
 		case 'a':
 			action |= MINIBLOOMDO_APPEND;
