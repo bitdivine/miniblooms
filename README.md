@@ -1,7 +1,7 @@
 MiniBlooms
 ==========
 
-This is a small, simple and fast implementation of bloom filters.  The default bloom filter implementation in Lua seems to dablooms, which were good to get me started but they are too large and slow for my purposes, so miniblooms were born.
+This is a small, simple and fast implementation of bloom filters.  The default bloom filter implementation in Lua seems to dablooms, which were good to get me started but they are too large and slow for my purposes, so miniblooms were born.  Their speed stems from a good understanding of the mathematics underlying bloom filters and how to optimise it in a cache friendly way.
 
 ## Build
 
