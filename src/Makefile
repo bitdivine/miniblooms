@@ -33,7 +33,7 @@ endif
 all: libminibloom.so libminibloom.a minibloomcat minibloomglue
 
 libminibloom.so: minibloom.o minibloomfile.o murmur.o
-	$(CROSS_COMPILE)$(CC) $(LDFLAGS) -shared $^ -o $@
+	$(CROSS_COMPILE)$(CC) -shared $^ -o $@ $(LDFLAGS)
 ifdef NDEBUG
 	$(CROSS_COMPILE)strip $@
 endif
@@ -42,10 +42,10 @@ libminibloom.a: minibloom.o minibloomfile.o murmur.o
 	$(CROSS_COMPILE_AR)$(AR) $(ARFLAGS) $@ $^
 
 minibloomcat: minibloom.o minibloomfile.o minibloomcat.o murmur.o
-	$(CROSS_COMPILE)$(CC) $(LDFLAGS) $^ -o $@
+	$(CROSS_COMPILE)$(CC) $^ -o $@ $(LDFLAGS)
 
 minibloomglue: minibloom.o minibloomfile.o minibloomglue.o murmur.o
-	$(CROSS_COMPILE)$(CC) $(LDFLAGS) $^ -o $@
+	$(CROSS_COMPILE)$(CC) $^ -o $@ $(LDFLAGS)
 
 clean:
 	rm -f libminibloom.so libminibloom.a *.o *.so *.gcno minibloomcat minibloomglue
