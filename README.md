@@ -49,6 +49,6 @@ This is the UNIX command line "uniq" without any sorting.  It reads lines from s
 
 ## Availabile from
 
-* IPFS: QmacMTXuR61uSz1AcqZdsRk5PjqTQRn66YeHL5du4K9c4b
+* ipfs://QmacMTXuR61uSz1AcqZdsRk5PjqTQRn66YeHL5du4K9c4b
   * https://gateway.ipfs.io/ipfs/QmacMTXuR61uSz1AcqZdsRk5PjqTQRn66YeHL5du4K9c4b
 * Github: https://github.com/bitdivine/miniblooms
